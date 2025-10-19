@@ -3,8 +3,8 @@ node_modules
 .env.local
 .env.production
 .env.development
-certs
-server
+certs/
+server/
 *.log
 .DS_Store
 .git

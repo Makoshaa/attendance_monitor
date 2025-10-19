@@ -5,7 +5,12 @@ import fs from 'fs';
 export default defineConfig(async () => {
   const { default: react } = await import('@vitejs/plugin-react');
 
-  return {
+  // Проверяем, существуют ли SSL сертификаты
+  const keyPath = path.resolve(__dirname, 'certs/localhost-key.pem');
+  const certPath = path.resolve(__dirname, 'certs/localhost-cert.pem');
+  const hasCertificates = fs.existsSync(keyPath) && fs.existsSync(certPath);
+
+  const config = {
     plugins: [react()],
     resolve: {
       alias: {
@@ -15,10 +20,6 @@ export default defineConfig(async () => {
     server: {
       host: '0.0.0.0',
       port: 5173,
-      https: {
-        key: fs.readFileSync(path.resolve(__dirname, 'certs/localhost-key.pem')),
-        cert: fs.readFileSync(path.resolve(__dirname, 'certs/localhost-cert.pem'))
-      },
       proxy: {
         '/api': {
           target: 'https://localhost:5000',
@@ -33,4 +34,14 @@ export default defineConfig(async () => {
       }
     }
   };
+
+  // Добавляем HTTPS только если сертификаты существуют
+  if (hasCertificates) {
+    config.server.https = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath)
+    };
+  }
+
+  return config;
 });
