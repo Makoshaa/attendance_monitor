@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Monitoring System</title>
+    <meta name="description" content="Умная система мониторинга с проверкой живости лица, аутентификацией и ролью администратора.">
+    <meta name="theme-color" content="#0969da">
+    <link rel="icon" href="src/test.gif">
+    <meta property="og:title" content="Smart Monitoring System">
+    <meta property="og:description" content="Компьютерное зрение, liveness и удобный личный кабинет.">
+    <meta property="og:type" content="website">
+    <style>
+        :root { --bg:#f6f8fa; --panel:#ffffff; --muted:#57606a; --text:#24292f; --primary:#0969da; --primary-600:#0969da; --primary-700:#0756b3; --danger:#d1242f; --border:#d0d7de; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background: var(--bg); color: var(--text); }
+        a { color: #0969da; text-decoration: none; }
+        a:hover { color: #054da7; }
+        .container { max-width: 1160px; margin: 24px auto; padding: 0 24px; }
+        .nav { display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; position: sticky; top: 0; backdrop-filter: blur(8px); box-shadow: 0 6px 20px rgba(31,35,40,0.06); z-index: 10; }
+        .nav a { padding: 6px 10px; border-radius: 8px; color: var(--text); }
+        .nav a.active { background: #dbeafe; color: #0b3aa1; border: 1px solid #bfd7ff; }
+        .spacer { flex: 1; }
+        .brand { display:flex; gap:12px; align-items:center; font-weight:800; color:#0b3aa1; font-size: 20px; }
+        .brand:hover { color:#0756b3; }
+        .brand-badge { width: 40px; height: 40px; border-radius: 10px; background:#dbeafe; border:1px solid #bfd7ff; display:grid; place-items:center; font-size:18px; color:#0b3aa1; }
+        .btn { appearance: none; border: 1px solid var(--border); background: #f6f8fa; color: var(--text); padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: .2s ease; }
+        .btn:hover { background: #eef2f7; }
+        .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+        .btn.primary:hover { background: var(--primary-700); color: #fff; }
+        .btn.danger { background: #fff5f5; border-color: #f2c0c3; color: #a40e1e; }
+        .btn.lg { padding: 14px 22px; font-size: 16px; }
+        .btn.sm { padding: 6px 10px; font-size: 12px; }
+        .grid { display: grid; gap: 16px; }
+        .grid.two { grid-template-columns: 1fr; }
+        @media (min-width: 640px) { .grid.two { grid-template-columns: repeat(2, 1fr); } }
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(31,35,40,0.04); }
+        .card h3, .card h4 { margin: 0 0 12px 0; font-weight: 600; letter-spacing: .2px; }
+        .muted { color: var(--muted); }
+        .form { display: grid; gap: 10px; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .field { flex: 1 1 200px; display: grid; gap: 6px; min-width: 160px; }
+        .field label { font-size: 12px; color: var(--muted); }
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"] { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: #ffffff; color: var(--text); outline: none; }
+        input::placeholder { color: #8c959f; }
+        .actions { display: flex; gap: 8px; align-items: center; }
+        .status { margin-top: 8px; min-height: 20px; }
+        .stack { display: grid; gap: 12px; }
+        .hero { display: grid; gap: 10px; }
+        .hero-center { text-align: center; padding: 48px 12px; }
+        .hero-center .hero-title { font-size: clamp(32px, 6vw, 56px); line-height:1.1; margin:0 0 8px 0; }
+        .hero-center .hero-sub { font-size: clamp(14px, 2.2vw, 18px); margin: 0 auto 16px auto; max-width: 800px; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 12px 30px rgba(31,35,40,0.06); }
+        table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); background: var(--panel); border-radius: 12px; overflow: hidden; }
+        thead th { text-align: left; font-weight: 600; color: var(--muted); background: #f6f8fa; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        tbody tr:hover { background: #f0f4f8; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); color: var(--muted); background: #fff; }
+        .layout { display: grid; gap: 16px; }
+        .cam-wrap { display: inline-block; position: relative; }
+        .cam-wrap canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+        /* Home landing */
+        .hero-grid { display:grid; grid-template-columns:1fr; gap:22px; align-items:center; }
+        @media (min-width: 880px) { .hero-grid { grid-template-columns: 1.05fr .95fr; } }
+        .hero-title { font-size: clamp(24px, 4vw, 40px); line-height:1.15; margin:0; }
+        .hero-sub { color: var(--muted); margin: 10px 0 16px 0; }
+        .hero-media { display:flex; align-items:center; justify-content:center; }
+        .hero-media .frame { display:inline-block; background:linear-gradient(180deg, #ffffff, #f8fbff); border:1px solid var(--border); border-radius:20px; box-shadow: 0 18px 40px rgba(31,35,40,0.10); overflow:hidden; padding:6px; }
+        .hero-media img, .hero-media video { display:block; max-width:100%; height:auto; }
+        .shine { position: relative; }
+        .shine::after { content:""; position:absolute; inset:-1px; border-radius:inherit; background: conic-gradient(from 180deg at 50% 50%, rgba(9,105,218,.25), rgba(255,255,255,0) 60%); filter: blur(12px); z-index:-1; }
+        .fade-in { animation: fadeIn .6s ease-out both; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform:none;} }
+        .feature-section { padding: 6px 0 24px; }
+        .feature-header { text-align:center; margin: 14px 0 12px 0; }
+        .feature-grid { display:grid; grid-template-columns: 1fr; gap:18px; }
+        @media (min-width: 720px) { .feature-grid { grid-template-columns: repeat(3,1fr); } }
+        .feature { background:#fff; border:1px solid var(--border); border-radius:14px; padding:18px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+        .feature:hover { transform: translateY(-3px); box-shadow: 0 16px 28px rgba(31,35,40,0.08); border-color:#bfd7ff; }
+        .feature .icon { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:10px; background:#f0f6ff; border:1px solid #bfd7ff; color:#0b3aa1; margin-bottom:8px; }
+        .feature .icon svg { width:22px; height:22px; display:block; }
+        .feature h4 { margin: 0 0 6px 0; font-size: 18px; }
+        .cta-row { display:flex; gap:12px; align-items:center; justify-content:flex-start; flex-wrap:wrap; }
+        .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; color:#0b3aa1; font-weight:600; }
+        .pill .dot { width:8px; height:8px; border-radius:999px; background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.15); }
+        /* Larger CTA buttons on hero */
+        .hero-center .btn.lg { padding: 18px 28px; font-size: 20px; }
+        /* Auth as standalone page */
+        .auth-page { min-height: calc(100vh - 68px); display: grid; place-items: center; padding: 16px; }
+        .auth-card-wrap { background: linear-gradient(180deg, rgba(219,234,254,.45), rgba(255,255,255,0)); padding: 1px; border-radius: 16px; }
+        .auth-card-inner { background:#fff; border:1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 12px 30px rgba(31,35,40,0.06); }
+        .helper { font-size: 12px; color: var(--muted); }
+        .password-field { position: relative; }
+        .password-field input { padding-right: 38px; }
+        .peek { position:absolute; right:8px; top:50%; transform: translateY(-50%); background:#f6f8fa; border:1px solid var(--border); color:var(--muted); padding:4px 8px; border-radius:8px; cursor:pointer; }
+        /* Footer */
+        .footer { max-width: 100%; margin: 24px auto 0; padding: 16px 24px; color: var(--muted); font-size: 12px; text-align: center; border-top: 1px solid var(--border); }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" crossorigin="anonymous"></script>
+    <script src="Emscrippeng_test.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+    <div class="container">
+        <nav class="nav px-4 py-3 sticky top-0 z-50 bg-white/80 backdrop-blur supports-backdrop-blur rounded-xl shadow-md border border-slate-200">
+            <a href="/" data-link class="brand gap-3 text-blue-900 font-extrabold text-lg hover:text-blue-700" aria-label="На главную">
+                <div class="brand-badge bg-blue-50 border-blue-200 text-blue-900">SM</div>
+                Smart Monitoring System
+            </a>
+            <div class="spacer"></div>
+            <a href="/login" data-link class="btn sm auth-link hidden">Login</a>
+            <a href="/register" data-link class="btn sm auth-link hidden">Register</a>
+            <a id="adminLink" href="/admin" data-link class="btn sm" style="display:none;">Admin</a>
+            <button id="logoutBtn" class="btn sm danger" style="display:none;" onclick="logout()">Logout</button>
+        </nav>
+
+        <div id="pageHome" style="display:none;">
+            <div class="panel bg-gradient-to-b from-blue-100/40 to-transparent rounded-2xl p-7" style="padding: 28px; background: linear-gradient(180deg, rgba(219,234,254,.25), rgba(255,255,255,0));">
+                <div class="hero-grid grid md:grid-cols-2 gap-6 items-center">
+                    <div class="hero-copy fade-in space-y-3">
+                        <h1 class="hero-title text-4xl md:text-5xl font-extrabold tracking-tight">Smart Monitoring System</h1>
+                        <p class="hero-sub text-slate-600">Ваша централизованная система для умного мониторинга и управления.</p>
+                        <div class="pill inline-flex items-center gap-2 ring-1 ring-blue-200 bg-white text-blue-900 font-semibold rounded-full px-3 py-1" aria-live="polite" style="margin: 8px 0 12px 0;">
+                            <span class="dot" aria-hidden="true"></span>
+                            Надежно • Быстро • Просто
+                        </div>
+                        <div id="liveStatus" class="muted" style="min-height:20px; margin: 2px 0 10px 0;"></div>
+                        <div class="cta-row mt-2 flex flex-wrap gap-3" style="margin-top: 6px;">
+                            <a href="/login" data-link class="btn lg primary shadow-lg hover:shadow-xl">Войти</a>
+                            <a href="/register" data-link class="btn lg shadow hover:shadow-md">Зарегистрироваться</a>
+                        </div>
+                    </div>
+                    <div class="hero-media fade-in">
+                        <div class="frame shine shadow-2xl ring-1 ring-slate-200">
+                            <img src="src/test.gif" alt="Демонстрация liveness" width="640" height="480" loading="eager">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="feature-section py-4">
+                <div class="feature-header text-center">
+                    <h3 class="text-xl font-semibold" style="margin:0; font-weight:600;">Ключевые особенности</h3>
+                    <p class="muted text-slate-600" style="margin:8px 0 0 0;">Современная архитектура, ориентированная на безопасность и удобство.</p>
+                </div>
+                <div class="feature-grid grid md:grid-cols-3 gap-5">
+                    <div class="feature rounded-xl border border-slate-200 p-5 bg-white transition hover:-translate-y-0.5 hover:shadow-xl hover:border-blue-200">
+                        <div class="icon w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 mb-2" aria-hidden="true">
+                            <!-- Rocket icon -->
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 19l3-3"/>
+                                <path d="M14 4l6 6-7 7H7v-6l7-7z"/>
+                                <path d="M15 9l-6 6"/>
+                            </svg>
+                        </div>
+                        <h4 class="font-semibold">Быстрый старт</h4>
+                        <p class="muted text-slate-600">Моментальный вход и запуск мониторинга с минимальными настройками.</p>
+                    </div>
+                    <div class="feature rounded-xl border border-slate-200 p-5 bg-white transition hover:-translate-y-0.5 hover:shadow-xl hover:border-blue-200">
+                        <div class="icon w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 mb-2" aria-hidden="true">
+                            <!-- Eye icon -->
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </div>
+                        <h4 class="font-semibold">Компьютерное зрение</h4>
+                        <p class="muted text-slate-600">Face Mesh и face-api.js для точного распознавания и контроля.</p>
+                    </div>
+                    <div class="feature rounded-xl border border-slate-200 p-5 bg-white transition hover:-translate-y-0.5 hover:shadow-xl hover:border-blue-200">
+                        <div class="icon w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 mb-2" aria-hidden="true">
+                            <!-- Shield icon -->
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <h4 class="font-semibold">Безопасность</h4>
+                        <p class="muted text-slate-600">Токенная аутентификация, контроль ролей и хранение дескрипторов.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageAuth" class="auth-page" style="display:none;">
+            <div class="auth-card-wrap max-w-xl w-full mx-auto bg-gradient-to-b from-blue-100/50 to-transparent p-px rounded-2xl">
+                <div class="auth-card-inner overflow-hidden rounded-2xl">
+                <div class="actions justify-center mb-2 gap-2 flex">
+                    <a href="/login" data-link id="tabLogin" class="btn shadow-sm hover:shadow border rounded-full">Вход</a>
+                    <a href="/register" data-link id="tabRegister" class="btn shadow-sm hover:shadow border rounded-full">Регистрация</a>
+                </div>
+                <div class="auth-viewport relative w-full overflow-hidden">
+                    <div id="authTrack" class="auth-track flex w-[200%] transition-transform duration-300 ease-out will-change-transform">
+                        <div class="auth-card" style="width:50%; padding-right:8px;">
+                            <h3 class="text-lg font-semibold">Вход</h3>
+                            <div class="form">
+                                <div class="row">
+                                    <div class="field">
+                                        <label for="loginEmail">Email</label>
+                                        <input id="loginEmail" type="email" placeholder="you@example.com" class="focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
+                                        <div class="helper">Используйте корпоративную почту</div>
+                                    </div>
+                                    <div class="field">
+                                        <label for="loginPassword">Пароль</label>
+                                        <div class="password-field">
+                                            <input id="loginPassword" type="password" placeholder="Введите пароль" class="focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
+                                            <button type="button" class="peek" onclick="togglePassword('loginPassword', this)">Показать</button>
+                                        </div>
+                                        <div class="helper">Минимум 6 символов</div>
+                                    </div>
+                                </div>
+                                <div class="actions mt-1">
+                                    <button class="btn primary shadow-md hover:shadow-lg" onclick="login()">Войти</button>
+                                </div>
+                                <div id="loginStatus" class="status"></div>
+                            </div>
+                        </div>
+                        <div class="auth-card" style="width:50%; padding-left:8px;">
+                            <h3 class="text-lg font-semibold">Регистрация</h3>
+                            <div class="form">
+                                <div class="row">
+                                    <div class="field">
+                                        <label for="firstName">Имя</label>
+                                        <input id="firstName" type="text" placeholder="Иван" class="focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="lastName">Фамилия</label>
+                                        <input id="lastName" type="text" placeholder="Иванов" class="focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="registerEmail">Email</label>
+                                        <input id="registerEmail" type="email" placeholder="you@example.com" class="focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
+                                        <div class="helper">Мы отправим письмо для подтверждения</div>
+                                    </div>
+                                    <div class="field">
+                                        <label for="registerPassword">Пароль</label>
+                                        <div class="password-field">
+                                            <input id="registerPassword" type="password" placeholder="Минимум 6 символов" class="focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
+                                            <button type="button" class="peek" onclick="togglePassword('registerPassword', this)">Показать</button>
+                                        </div>
+                                        <div class="helper">Рекомендуем использовать буквы и цифры</div>
+                                    </div>
+                                </div>
+                                <div class="actions mt-1">
+                                    <button class="btn primary shadow-md hover:shadow-lg" onclick="register()">Зарегистрироваться</button>
+                                </div>
+                                <div id="registerStatus" class="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        
+
+        <div id="pageApp" style="display:none;">
+            <div class="layout">
+                <div class="panel">
+                    <div class="hero">
+                        <div class="cam-wrap">
+                            <video id="webcam" width="640" height="480" autoplay></video>
+                            <canvas id="faceCanvas" width="640" height="480"></canvas>
+                        </div>
+                        <div class="actions">
+                            <button class="btn primary" onclick="captureAndSendSnapshot()">Начать проверку</button>
+                            <span class="muted">Статус распознавания отображается ниже.</span>
+                        </div>
+                        <div id="authStatus" class="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageDashboard" style="display:none;">
+            <div class="stack">
+                <div class="card">
+                    <h3>Личный кабинет</h3>
+                    <div id="attendanceGate" class="status"></div>
+                    <div class="actions" id="attendanceActions" style="display:none;">
+                        <button class="btn primary" onclick="openAttendanceModal()">Отметиться</button>
+                    </div>
+                </div>
+                <div class="card" id="dashboardData" style="display:none;">
+                    <h4>Данные</h4>
+                    <p class="muted">Здесь будут данные пользователя и статистика посещаемости.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageAdmin" style="display:none;">
+            <div class="stack">
+                <div class="card">
+                    <h3>Админ: пользователи</h3>
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Имя</th>
+                                <th>Фамилия</th>
+                                <th>Админ</th>
+                                <th>Создан</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="adminStatus" class="status"></div>
+                </div>
+                <div class="card">
+                    <h4>Загрузка дескриптора</h4>
+                    <div class="row" style="align-items:center;">
+                        <div class="field" style="max-width:160px;">
+                            <label for="uploadUserId">User ID</label>
+                            <input id="uploadUserId" type="number" placeholder="ID" />
+                        </div>
+                        <div class="field">
+                            <label for="uploadFile">Файл</label>
+                            <input id="uploadFile" type="file" accept="image/*" />
+                        </div>
+                        <div class="actions">
+                            <button class="btn primary" onclick="uploadUserPhoto()">Загрузить</button>
+                            <button class="btn" onclick="deleteUserPhoto()">Удалить фото</button>
+                        </div>
+                    </div>
+                    <div id="uploadStatus" class="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Modal -->
+    <div id="attendanceModal" style="display:none; position:fixed; inset:0; background: rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px;">
+        <div class="card" style="max-width:720px; width:100%; position:relative;">
+            <div class="actions" style="justify-content:space-between; margin-bottom:8px;">
+                <h4 style="margin:0;">Подтверждение присутствия</h4>
+                <button class="btn" onclick="closeAttendanceModal()">Закрыть</button>
+            </div>
+            <div class="hero">
+                <div class="cam-wrap">
+                    <video id="attWebcam" width="640" height="480" autoplay></video>
+                    <canvas id="attCanvas" width="640" height="480" style="display:none;"></canvas>
+                </div>
+                <div class="actions">
+                    <button class="btn primary" onclick="submitAttendance()">Отметиться</button>
+                </div>
+                <div id="attendanceStatus" class="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2025 Smart Monitoring System. Все права защищены.
+    </footer>
+
+    <script>
+        let stream;
+        let faceMesh;
+        let faceCanvas;
+        let faceCtx;
+        let currentResult = 0;
+        let faceResults = {}; // Хранит результаты для каждого лица
+        let cameraStarted = false;
+        let captureIntervalId = null;
+        let referenceDescriptor = null; // Float32Array from face-api.js
+        let referenceFullName = '';
+        let lastRecognizedName = '';
+        let lastDistance = null;
+
+        const drawingUtils = window;
+
+        // Инициализация MediaPipe Face Mesh
+        async function initializeFaceMesh() {
+            faceMesh = new FaceMesh({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                }
+            });
+
+            faceMesh.setOptions({
+                maxNumFaces: 10, // Увеличиваем до 10 лиц
+                refineLandmarks: true,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            faceMesh.onResults(onFaceMeshResults);
+
+            // Получаем canvas для отрисовки
+            faceCanvas = document.getElementById('faceCanvas');
+            faceCtx = faceCanvas.getContext('2d');
+        }
+
+        // Обработка результатов Face Mesh
+        function onFaceMeshResults(results) {
+            faceCtx.clearRect(0, 0, faceCanvas.width, faceCanvas.height);
+            
+            if (results.multiFaceLandmarks) {
+                // Обрабатываем каждое обнаруженное лицо
+                for (let i = 0; i < results.multiFaceLandmarks.length; i++) {
+                    const landmarks = results.multiFaceLandmarks[i];
+                    
+                    // Проверяем каждое лицо отдельно
+                    checkIndividualFace(i, landmarks).then(() => {
+                        // После проверки отрисовываем контур с индивидуальным результатом
+                        drawFaceOutline(landmarks, i);
+                    });
+                }
+            }
+        }
+
+        // Отрисовка квадрата вокруг головы
+        function drawFaceOutline(landmarks, faceIndex = 0) {
+            // Находим границы головы для создания квадрата
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            
+            // Используем ключевые точки головы для определения границ
+            const headPoints = [10, 151, 9, 8, 107, 55, 65, 52, 53, 46, 172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454, 356, 389, 251, 284, 332, 297, 338];
+            
+            for (let i = 0; i < headPoints.length; i++) {
+                const point = landmarks[headPoints[i]];
+                const x = point.x * faceCanvas.width;
+                const y = point.y * faceCanvas.height;
+                
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+            
+            // Добавляем отступы для квадрата
+            const padding = 30;
+            minX = Math.max(0, minX - padding);
+            maxX = Math.min(faceCanvas.width, maxX + padding);
+            minY = Math.max(0, minY - padding);
+            maxY = Math.min(faceCanvas.height, maxY + padding);
+            
+            // Делаем квадрат (одинаковая ширина и высота)
+            const width = maxX - minX;
+            const height = maxY - minY;
+            const size = Math.max(width, height);
+            
+            // Центрируем квадрат
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            const squareX = centerX - size / 2;
+            const squareY = centerY - size / 2;
+            
+            // Определяем цвет на основе индивидуального результата лица
+            let strokeColor;
+            const faceResult = faceResults[faceIndex] || currentResult; // Используем индивидуальный результат или общий
+            
+            if (faceResult < 0.90) {
+                // Красные оттенки для фейковых лиц
+                const redShades = ['#FF0000', '#FF4500', '#DC143C', '#B22222', '#8B0000'];
+                strokeColor = redShades[faceIndex % redShades.length];
+            } else {
+                // Зеленые оттенки для реальных лиц
+                const greenShades = ['#00FF00', '#32CD32', '#00FA9A', '#00CED1', '#20B2AA'];
+                strokeColor = greenShades[faceIndex % greenShades.length];
+            }
+            
+            // Отрисовываем квадрат
+            faceCtx.beginPath();
+            faceCtx.strokeStyle = strokeColor;
+            faceCtx.lineWidth = 3;
+            faceCtx.rect(squareX, squareY, size, size);
+            faceCtx.stroke();
+            
+            // Добавляем номер лица и результат
+            faceCtx.fillStyle = strokeColor;
+            faceCtx.font = '14px Arial';
+            const resultText = faceResult < 0.90 ? 'Фейк' : 'Реал';
+            const baseText = `Лицо ${faceIndex + 1}: ${resultText} (${faceResult.toFixed(2)})`;
+            faceCtx.fillText(baseText, squareX + 5, squareY + 20);
+            // Имя и дистанция распознавания ниже
+            if (lastRecognizedName) {
+                faceCtx.fillText(`${lastRecognizedName} (dist: ${typeof lastDistance === 'number' ? lastDistance.toFixed(3) : '?'})`, squareX + 5, squareY + 38);
+            }
+        }
+
+
+        async function startCamera() {
+            if (cameraStarted) return;
+            try {
+                const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream = mediaStream;
+                const webcam = document.getElementById('webcam');
+                webcam.srcObject = mediaStream;
+                webcam.onloadedmetadata = async () => {
+                    await initializeFaceMesh();
+                    await loadFaceApiModels();
+                    await loadReferenceFace();
+                };
+                cameraStarted = true;
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+            }
+        }
+
+
+        function captureAndSendSnapshot() {
+            if (stream && faceMesh) {
+                console.log('WebSocket connection opened:', event);
+
+                const canvas = document.createElement('canvas');
+                const webcam = document.getElementById('webcam');
+                canvas.width = webcam.width;
+                canvas.height = webcam.height;
+
+                const context = canvas.getContext('2d');
+                context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+
+                // Face recognition: compute and display name if matches
+                recognizeLiveFaceAndGetName(canvas).then((fullName) => {
+                    if (fullName) {
+                        const live = document.getElementById('liveStatus');
+                        if (live) {
+                            live.textContent = `Распознан: ${fullName}`;
+                            live.style.color = 'green';
+                        }
+                    }
+                });
+
+                // Получаем данные из холста в формате base64
+                const imageData = canvas.toDataURL('image/jpeg', 0.4);
+
+                const utf8Encoder = new TextEncoder('utf-8');
+                const encodedData = utf8Encoder.encode(imageData);
+
+                // Allocate memory
+                const dst = _malloc(encodedData.length + 1); // +1 for null terminator
+
+                // Copy data to the memory
+                HEAPU8.set(encodedData, dst);
+
+                // Null-terminate the string in memory
+                HEAPU8[dst + encodedData.length] = 0;
+
+                // Assuming _nentendo is a function for further processing
+                const result = _nentendo(dst);
+
+                // Free the allocated memory
+                _free(dst);
+
+                // Обновляем текущий результат для изменения цвета линий
+                currentResult = result;
+
+                // Обрабатываем кадр через Face Mesh для отслеживания головы
+                faceMesh.send({ image: webcam });
+
+                const live = document.getElementById('liveStatus');
+                if (live) {
+                    if (result > 0.90) {
+                        live.textContent = 'Реальный фото — Confident: ' + result;
+                        live.style.color = 'green';
+                    } else {
+                        live.textContent = 'Фейковый фото — Confident: ' + result;
+                        live.style.color = 'red';
+                    }
+                }
+
+                if (!captureIntervalId) {
+                    captureIntervalId = setInterval(captureAndSendSnapshot, 300); // немного реже из-за распознавания
+                }
+            }
+        }
+
+        // === Auth client ===
+        const API_BASE = '';
+
+        function saveToken(token) {
+            try { localStorage.setItem('auth_token', token); } catch (e) {}
+        }
+
+        function getToken() {
+            try { return localStorage.getItem('auth_token') || ''; } catch (e) { return ''; }
+        }
+
+        function setStatus(id, text, isError) {
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.style.color = isError ? 'red' : 'green';
+        }
+
+        function showCameraUI(show) {
+            const cam = document.getElementById('cameraSection');
+            const auth = document.getElementById('authSection');
+            cam.style.display = show ? 'block' : 'none';
+            auth.style.display = show ? 'none' : 'block';
+            if (show) {
+                startCamera();
+            }
+        }
+
+        function logout() {
+            try { localStorage.removeItem('auth_token'); } catch (e) {}
+            // clear capture loop
+            if (captureIntervalId) {
+                clearInterval(captureIntervalId);
+                captureIntervalId = null;
+            }
+            // stop camera
+            if (stream) {
+                try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                stream = undefined;
+                cameraStarted = false;
+            }
+            // UI and route reset
+            setStatus('authStatus', 'Вы вышли из системы', false);
+            setNav();
+            navigate('/login');
+        }
+
+        // --- Admin upload photo ---
+        async function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadUserPhoto() {
+            const token = getToken();
+            const userId = Number(document.getElementById('uploadUserId').value);
+            const file = document.getElementById('uploadFile').files[0];
+            const status = document.getElementById('uploadStatus');
+            status.textContent = '';
+            if (!userId || !file) {
+                status.textContent = 'Укажите пользователя и файл';
+                status.style.color = 'red';
+                return;
+            }
+            try {
+                // Ensure face-api models are loaded before inference
+                if (!faceapi.nets.ssdMobilenetv1.params || !faceapi.nets.faceLandmark68Net.params || !faceapi.nets.faceRecognitionNet.params) {
+                    await loadFaceApiModels();
+                }
+                const imageBase64 = await fileToBase64(file);
+                // Compute descriptor client-side for faster runtime usage
+                const img = new Image();
+                await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = imageBase64; });
+                const detection = await faceapi
+                    .detectSingleFace(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                const descriptor = detection && detection.descriptor ? Array.from(detection.descriptor) : null;
+                const res = await fetch(`${API_BASE}/api/admin/users/${userId}/photo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ descriptor })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Ошибка загрузки');
+                status.textContent = 'Дескриптор сохранён';
+                status.style.color = 'green';
+                await renderAdmin();
+            } catch (e) {
+                status.textContent = e.message || 'Ошибка';
+                status.style.color = 'red';
+            }
+        }
+
+        async function deleteUserPhoto() {
+            const token = getToken();
+            const userId = Number(document.getElementById('uploadUserId').value);
+            const status = document.getElementById('uploadStatus');
+            status.textContent = '';
+            if (!userId) {
+                status.textContent = 'Укажите ID пользователя';
+                status.style.color = 'red';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/users/${userId}/photo`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Ошибка удаления');
+                status.textContent = `Удалено записей: ${data.deleted}`;
+                status.style.color = 'green';
+                await renderAdmin();
+            } catch (e) {
+                status.textContent = e.message || 'Ошибка';
+                status.style.color = 'red';
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, firstName, lastName })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Ошибка регистрации');
+                saveToken(data.token);
+                setStatus('registerStatus', `Зарегистрирован: ${data.user.firstName} ${data.user.lastName} (${data.user.email})`, false);
+                navigate('/app');
+            } catch (e) {
+                setStatus('registerStatus', e.message || 'Ошибка регистрации', true);
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Ошибка входа');
+                saveToken(data.token);
+                setStatus('loginStatus', `Вход выполнен: ${data.user.firstName} ${data.user.lastName} (${data.user.email})`, false);
+                navigate('/app');
+            } catch (e) {
+                setStatus('loginStatus', e.message || 'Ошибка входа', true);
+            }
+        }
+
+        async function whoami() {
+            const token = getToken();
+            if (!token) {
+                setStatus('authStatus', 'Токен отсутствует. Войдите или зарегистрируйтесь.', true);
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Ошибка проверки токена');
+                setStatus('authStatus', `Токен OK. Пользователь: ${data.firstName} ${data.lastName} (${data.email})`, false);
+                navigate('/app');
+            } catch (e) {
+                setStatus('authStatus', e.message || 'Ошибка проверки токена', true);
+            }
+        }
+
+        // --- Face recognition helpers (euclidean distance) ---
+        async function loadFaceApiModels() {
+            // Load from local static folder. Place face-api weights in /models at project root.
+            // Required files include: ssd_mobilenetv1_model-weights_manifest.json, face_landmark_68_model-weights_manifest.json, face_recognition_model-weights_manifest.json
+            const MODEL_URL = '/models';
+            await Promise.all([
+                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+            ]);
+            console.log('[face-api] Models loaded (SSD Mobilenet v1)');
+        }
+
+        async function loadReferenceFace() {
+            referenceDescriptor = null;
+            const token = getToken();
+            if (!token) return;
+            try {
+                const meRes = await fetch(`${API_BASE}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!meRes.ok) { console.warn('[face-api] me failed'); return; }
+                const me = await meRes.json();
+                referenceFullName = `${me.firstName || ''} ${me.lastName || ''}`.trim();
+                const res = await fetch(`${API_BASE}/api/users/${me.userId}/descriptor`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) { console.warn('[face-api] no stored descriptor'); return; }
+                const data = await res.json();
+                if (Array.isArray(data.descriptor)) {
+                    referenceDescriptor = new Float32Array(data.descriptor);
+                    console.log('[face-api] Loaded stored descriptor. User:', referenceFullName, 'Len:', referenceDescriptor.length);
+                }
+            } catch {}
+        }
+        async function recognizeLiveFaceAndGetName(currentFrameCanvas) {
+            if (!referenceDescriptor) return '';
+            const detection = await faceapi
+                .detectSingleFace(currentFrameCanvas, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+            if (!detection || !detection.descriptor) return '';
+            const distance = faceapi.euclideanDistance(referenceDescriptor, detection.descriptor);
+            lastDistance = distance;
+            console.log('[face-api] Frame recognized distance:', distance);
+            if (distance < 0.6) {
+                lastRecognizedName = referenceFullName || '';
+                return referenceFullName || '';
+            }
+            lastRecognizedName = '';
+            return '';
+        }
+
+        // --- Simple client-side router ---
+        function navigate(path) {
+            if (location.pathname !== path) history.pushState({}, '', path);
+            renderRoute();
+        }
+
+        async function setNav() {
+            const token = getToken();
+            const logoutBtn = document.getElementById('logoutBtn');
+            const adminLink = document.getElementById('adminLink');
+            logoutBtn.style.display = token ? 'inline-block' : 'none';
+            adminLink.style.display = 'none';
+            if (token) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (res.ok) {
+                        const me = await res.json();
+                        if (me.isAdmin) adminLink.style.display = 'inline-block';
+                    }
+                } catch {}
+            }
+        }
+
+        async function requireAuthOrRedirect() {
+            const token = getToken();
+            if (!token) {
+                navigate('/login');
+                return false;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) {
+                    navigate('/login');
+                    return false;
+                }
+                return true;
+            } catch {
+                navigate('/login');
+                return false;
+            }
+        }
+
+        function setActiveNav(path) {
+            document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+            const link = document.querySelector(`.nav a[href="${path}"]`);
+            if (link) link.classList.add('active');
+        }
+
+        async function renderRoute() {
+            const route = location.pathname;
+            document.getElementById('pageHome').style.display = 'none';
+            document.getElementById('pageAuth').style.display = 'none';
+            document.getElementById('pageApp').style.display = 'none';
+            document.getElementById('pageDashboard').style.display = 'none';
+            document.getElementById('pageAdmin').style.display = 'none';
+            await setNav();
+            // Hide login/register on home page
+            document.querySelectorAll('.auth-link').forEach(a => {
+                // Hide on home, login and register pages
+                const shouldHide = (route === '/' || route === '/login' || route === '/register');
+                a.style.display = shouldHide ? 'none' : 'inline-block';
+            });
+            if (route === '/') {
+                document.getElementById('pageHome').style.display = 'block';
+                setActiveNav('/');
+            } else if (route === '/login') {
+                document.getElementById('pageAuth').style.display = 'block';
+                switchAuthTab('login');
+                setActiveNav('/login');
+            } else if (route === '/register') {
+                document.getElementById('pageAuth').style.display = 'block';
+                switchAuthTab('register');
+                setActiveNav('/register');
+            } else if (route === '/dashboard') {
+                if (await requireAuthOrRedirect()) {
+                    document.getElementById('pageDashboard').style.display = 'block';
+                    setActiveNav('/dashboard');
+                    await loadAttendanceGate();
+                }
+            } else if (route === '/app') {
+                if (await requireAuthOrRedirect()) {
+                    // Only admins can access live demo
+                    try {
+                        const res = await fetch(`${API_BASE}/api/auth/me`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+                        const me = res.ok ? await res.json() : { isAdmin: false };
+                        if (!me.isAdmin) { navigate('/dashboard'); return; }
+                    } catch { navigate('/dashboard'); return; }
+                    document.getElementById('pageApp').style.display = 'block';
+                    setActiveNav('/app');
+                    startCamera();
+                }
+            } else if (route === '/admin') {
+                if (await requireAuthOrRedirect()) {
+                    await renderAdmin();
+                    document.getElementById('pageAdmin').style.display = 'block';
+                    setActiveNav('/admin');
+                }
+            } else {
+                navigate('/login');
+            }
+        }
+
+        async function renderAdmin() {
+            const token = getToken();
+            const tableBody = document.querySelector('#usersTable tbody');
+            tableBody.innerHTML = '';
+            document.getElementById('adminStatus').textContent = '';
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Ошибка загрузки пользователей');
+                for (const u of data.users) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${u.id}</td><td>${u.email}</td><td>${u.first_name || ''}</td><td>${u.last_name || ''}</td><td>${u.is_admin ? 'Yes' : 'No'}</td><td>${new Date(u.created_at).toLocaleString()}</td>`;
+                    tableBody.appendChild(tr);
+                }
+            } catch (e) {
+                document.getElementById('adminStatus').textContent = e.message || 'Ошибка';
+                document.getElementById('adminStatus').style.color = 'red';
+            }
+        }
+
+        // Auth cards animation
+        function switchAuthTab(which) {
+            const track = document.getElementById('authTrack');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            if (!track) return;
+            if (which === 'register') {
+                track.style.transform = 'translateX(-50%)';
+                tabLogin.classList.remove('primary');
+                tabRegister.classList.add('primary');
+            } else {
+                track.style.transform = 'translateX(0)';
+                tabRegister.classList.remove('primary');
+                tabLogin.classList.add('primary');
+            }
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId, btn) {
+            try {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                const nextType = input.type === 'password' ? 'text' : 'password';
+                input.type = nextType;
+                if (btn) btn.textContent = nextType === 'password' ? 'Показать' : 'Скрыть';
+            } catch {}
+        }
+
+        // Attendance modal and gating
+        let attStream;
+        async function openAttendanceModal() {
+            const m = document.getElementById('attendanceModal');
+            m.style.display = 'flex';
+            try {
+                attStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const v = document.getElementById('attWebcam');
+                v.srcObject = attStream;
+                // Ensure models are loaded for attendance flow
+                try { await loadFaceApiModels(); } catch {}
+            } catch (e) {
+                setStatus('attendanceStatus', 'Нет доступа к камере', true);
+            }
+        }
+        function closeAttendanceModal() {
+            const m = document.getElementById('attendanceModal');
+            m.style.display = 'none';
+            if (attStream) { try { attStream.getTracks().forEach(t => t.stop()); } catch {}
+                attStream = undefined; }
+        }
+        async function captureAttendance() {
+            const v = document.getElementById('attWebcam');
+            const c = document.getElementById('attCanvas');
+            const ctx = c.getContext('2d');
+            ctx.drawImage(v, 0, 0, c.width, c.height);
+            setStatus('attendanceStatus', 'Снимок получен. Отправьте для подтверждения.', false);
+        }
+        async function submitAttendance() {
+            setStatus('attendanceStatus', 'Обработка...', false);
+            try {
+                // Make sure models are loaded
+                if (!faceapi.nets.ssdMobilenetv1.params || !faceapi.nets.faceLandmark68Net.params || !faceapi.nets.faceRecognitionNet.params) {
+                    await loadFaceApiModels();
+                }
+                // Auto capture current frame from modal webcam
+                const v = document.getElementById('attWebcam');
+                const c = document.getElementById('attCanvas');
+                const ctx = c.getContext('2d');
+                ctx.drawImage(v, 0, 0, c.width, c.height);
+                // Compute descriptor on client
+                const detection = await faceapi
+                    .detectSingleFace(c, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                if (!detection || !detection.descriptor) {
+                    setStatus('attendanceStatus', 'Лицо не найдено', true);
+                    return;
+                }
+                const descriptor = Array.from(detection.descriptor);
+                const res = await fetch(`${API_BASE}/api/attendance/mark`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ descriptor })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Ошибка отметки');
+                setStatus('attendanceStatus', 'Отметка засчитана', false);
+                closeAttendanceModal();
+                await loadAttendanceGate();
+            } catch (e) {
+                setStatus('attendanceStatus', e.message || 'Ошибка', true);
+            }
+        }
+        async function loadAttendanceGate() {
+            const gate = document.getElementById('attendanceGate');
+            const actions = document.getElementById('attendanceActions');
+            const dash = document.getElementById('dashboardData');
+            try {
+                const res = await fetch(`${API_BASE}/api/attendance/status`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+                const data = await res.json();
+                if (res.ok && data.marked === true) {
+                    gate.textContent = 'Доступ разрешён. Добро пожаловать!';
+                    gate.style.color = 'green';
+                    actions.style.display = 'none';
+                    dash.style.display = 'block';
+                } else {
+                    gate.textContent = 'Для доступа отметьтесь, пожалуйста.';
+                    gate.style.color = '#a15f00';
+                    actions.style.display = 'flex';
+                    dash.style.display = 'none';
+                }
+            } catch {
+                gate.textContent = 'Ошибка проверки статуса.';
+                gate.style.color = 'red';
+                actions.style.display = 'flex';
+                dash.style.display = 'none';
+            }
+        }
+
+        window.openAttendanceModal = openAttendanceModal;
+        window.closeAttendanceModal = closeAttendanceModal;
+        window.captureAttendance = captureAttendance;
+        window.submitAttendance = submitAttendance;
+
+        window.addEventListener('popstate', renderRoute);
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a[data-link]');
+            if (!a) return;
+            e.preventDefault();
+            navigate(a.getAttribute('href'));
+        });
+
+        // initial render
+        renderRoute();
+
+        // Функция для проверки отдельного лица
+        async function checkIndividualFace(faceIndex, landmarks) {
+            const canvas = document.createElement('canvas');
+            const webcam = document.getElementById('webcam');
+            canvas.width = webcam.width;
+            canvas.height = webcam.height;
+            const context = canvas.getContext('2d');
+            context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+
+            // Вырезаем область лица из изображения
+            const faceImage = extractFaceFromLandmarks(canvas, landmarks);
+            
+            // Конвертируем в base64
+            const imageData = faceImage.toDataURL('image/jpeg', 0.4);
+            
+            const utf8Encoder = new TextEncoder('utf-8');
+            const encodedData = utf8Encoder.encode(imageData);
+            
+            const dst = _malloc(encodedData.length + 1);
+            HEAPU8.set(encodedData, dst);
+            HEAPU8[dst + encodedData.length] = 0;
+            
+            const result = _nentendo(dst);
+            _free(dst);
+            
+            // Сохраняем результат для конкретного лица
+            faceResults[faceIndex] = result;
+            
+            return result;
+        }
+
+        // Функция для вырезания области лица
+        function extractFaceFromLandmarks(sourceCanvas, landmarks) {
+            const faceCanvas = document.createElement('canvas');
+            const faceCtx = faceCanvas.getContext('2d');
+            
+            // Находим границы лица
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            const headPoints = [10, 151, 9, 8, 107, 55, 65, 52, 53, 46, 172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454, 356, 389, 251, 284, 332, 297, 338];
+            
+            for (let i = 0; i < headPoints.length; i++) {
+                const point = landmarks[headPoints[i]];
+                const x = point.x * sourceCanvas.width;
+                const y = point.y * sourceCanvas.height;
+                
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+            
+            // Добавляем отступы
+            const padding = 50;
+            minX = Math.max(0, minX - padding);
+            maxX = Math.min(sourceCanvas.width, maxX + padding);
+            minY = Math.max(0, minY - padding);
+            maxY = Math.min(sourceCanvas.height, maxY + padding);
+            
+            // Устанавливаем размеры canvas для лица
+            faceCanvas.width = maxX - minX;
+            faceCanvas.height = maxY - minY;
+            
+            // Копируем область лица
+            faceCtx.drawImage(sourceCanvas, minX, minY, maxX - minX, maxY - minY, 0, 0, faceCanvas.width, faceCanvas.height);
+            
+            return faceCanvas;
+        }
+
+        
+    </script>
+
+</body>
+
+</html>
