@@ -40,6 +40,10 @@ module.exports = async (req, res) => {
       return require('./admin/users')(req, res);
     }
     
+    if (pathname === '/api/admin/create-user') {
+      return require('./admin/create-user')(req, res);
+    }
+    
     if (pathname === '/api/health') {
       return require('./health')(req, res);
     }
