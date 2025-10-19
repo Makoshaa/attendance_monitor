@@ -4,32 +4,35 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = 'admin@mail.ru';
-  const password = 'admin123';
+  // Создаем админа по умолчанию
+  const adminEmail = 'admin@example.com';
+  const adminPassword = 'admin123';
+  
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail }
+  });
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-
-  if (!existing) {
-    const passwordHash = await bcrypt.hash(password, 10);
-
+  if (!existingAdmin) {
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
+    
     await prisma.user.create({
       data: {
-        email,
+        email: adminEmail,
         passwordHash,
         role: 'ADMIN',
-        fullName: 'Administrator'
+        fullName: 'System Administrator'
       }
     });
 
-    console.log('Admin user seeded successfully.');
+    console.log('Admin user created:', adminEmail);
   } else {
-    console.log('Admin user already exists.');
+    console.log('Admin user already exists');
   }
 }
 
 main()
-  .catch((error) => {
-    console.error('Seeding error:', error);
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
