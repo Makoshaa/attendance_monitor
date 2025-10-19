@@ -15,21 +15,17 @@ const registerSchema = z.object({
 function respondWithUser(res, user) {
   const token = signJwt(user);
 
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000
-  };
-
-  res.cookie('token', token, cookieOptions);
+  // Для Vercel serverless функций используем заголовки вместо cookies
+  res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Lax; Max-Age=${24 * 60 * 60}`);
+  
   res.json({
     user: {
       id: user.id,
       email: user.email,
       role: user.role,
       fullName: user.fullName
-    }
+    },
+    token: token // Также возвращаем токен в ответе для клиента
   });
 }
 
