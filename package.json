@@ -11,12 +11,13 @@
     "dev:client": "vite",
     "build": "npm run build:client",
     "build:client": "vite build",
-    "vercel-build": "prisma generate && prisma migrate deploy && vite build", 
+    "vercel-build": "prisma generate && prisma migrate deploy && npm run prisma:seed && vite build", 
     "start": "node server/index.js",
     "preview": "vite preview",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:seed": "node prisma/seed.js",
+    "create-admin": "node scripts/create-admin.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
