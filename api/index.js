@@ -16,32 +16,16 @@ module.exports = async (req, res) => {
     console.log(`[API] ${req.method} ${pathname}`);
     
     // Маршрутизация API запросов
-    if (pathname === '/api/auth/login') {
-      return require('./auth/login')(req, res);
+    if (pathname.startsWith('/api/auth/')) {
+      return require('./auth')(req, res);
     }
     
-    if (pathname === '/api/auth/register') {
-      return require('./auth/register')(req, res);
+    if (pathname.startsWith('/api/attendance/')) {
+      return require('./attendance')(req, res);
     }
     
-    if (pathname === '/api/auth/me') {
-      return require('./auth/me')(req, res);
-    }
-    
-    if (pathname === '/api/attendance/mark') {
-      return require('./attendance/mark')(req, res);
-    }
-    
-    if (pathname === '/api/attendance/history') {
-      return require('./attendance/history')(req, res);
-    }
-    
-    if (pathname === '/api/admin/users') {
-      return require('./admin/users')(req, res);
-    }
-    
-    if (pathname === '/api/admin/create-user') {
-      return require('./admin/create-user')(req, res);
+    if (pathname.startsWith('/api/admin/')) {
+      return require('./admin')(req, res);
     }
     
     if (pathname === '/api/health') {
