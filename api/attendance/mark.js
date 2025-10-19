@@ -1,6 +1,6 @@
 const { z } = require('zod');
 const prisma = require('../_lib/prisma');
-const { verifyJwt } = require('../../server/utils/jwt');
+const { verifyJwt } = require('../_lib/jwt');
 const { findBestMatch } = require('../../server/services/faceService');
 
 const markSchema = z.object({

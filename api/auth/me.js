@@ -1,5 +1,8 @@
-const prisma = require('../_lib/prisma');
-const { verifyJwt } = require('../../server/utils/jwt');
+const { PrismaClient } = require('@prisma/client');
+const { verifyJwt } = require('../_lib/jwt');
+
+// Создаем новый экземпляр Prisma для каждого запроса
+const prisma = new PrismaClient();
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -37,5 +40,7 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ message: 'Ошибка получения данных пользователя' });
+  } finally {
+    await prisma.$disconnect();
   }
 };

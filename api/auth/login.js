@@ -1,7 +1,10 @@
 const bcrypt = require('bcryptjs');
 const { z } = require('zod');
-const prisma = require('../_lib/prisma');
-const { signJwt } = require('../../server/utils/jwt');
+const { PrismaClient } = require('@prisma/client');
+const { signJwt } = require('../_lib/jwt');
+
+// Создаем новый экземпляр Prisma для каждого запроса
+const prisma = new PrismaClient();
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -65,5 +68,7 @@ module.exports = async (req, res) => {
 
     console.error('[LOGIN] Error:', error);
     res.status(500).json({ message: 'Ошибка авторизации' });
+  } finally {
+    await prisma.$disconnect();
   }
 };

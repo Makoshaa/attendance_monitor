@@ -44,6 +44,10 @@ module.exports = async (req, res) => {
       return require('./health')(req, res);
     }
     
+    if (pathname === '/api/test-db') {
+      return require('./test-db')(req, res);
+    }
+    
     console.log(`[API] 404 - Not found: ${pathname}`);
     res.status(404).json({ message: 'API endpoint not found' });
   } catch (error) {

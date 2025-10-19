@@ -1,5 +1,5 @@
 const prisma = require('../_lib/prisma');
-const { verifyJwt } = require('../../server/utils/jwt');
+const { verifyJwt } = require('../_lib/jwt');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
